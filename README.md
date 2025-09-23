@@ -1,4 +1,4 @@
-# Coc-Championship: Sistema de Gerenciamento de Liga Interna para Clash of Clans (13º Pelotão)
+# Sistema de Gerenciamento de Liga Interna para Clash of Clans (13º Pelotão)
 
 ## Descrição
 
@@ -6,7 +6,7 @@ Coc-Championship é um sistema web simples e eficiente para gerenciar ligas inte
 
 O sistema é construído com **Streamlit** para a interface frontend, **Python** para a lógica de negócios e **Firebase Firestore** como banco de dados NoSQL para armazenamento persistente. A autenticação é baseada em usuários armazenados no Firestore (com hash de senha), com suporte a roles de administrador para operações sensíveis.
 
-**Versão atual:** 1.0.1 (consulte `version.py` para atualizações).
+**Versão atual:** 1.0.0 (consulte `version.py` para atualizações).
 
 **Objetivo principal:** Facilitar a organização de torneios internos, promovendo engajamento e competição amigável entre jogadores.
 
