@@ -6,6 +6,7 @@ import hashlib
 from datetime import datetime
 import firebase_init
 from firebase_admin import firestore
+from version import __version__
 
 # ---------------------------
 # CONFIG
@@ -827,3 +828,4 @@ elif menu == "Histórico Individual":
 # ---------------------------
 st.markdown("---")
 st.caption("© 13º Pelotão. Todos os direitos reservados || Cabo ~ Loki ~ Necrod")
+st.caption(f"Versão: {__version__}")
