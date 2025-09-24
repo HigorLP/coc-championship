@@ -1,144 +1,175 @@
-# Sistema de Gerenciamento de Liga Interna para Clash of Clans (13º Pelotão)
+# 📘 README.md (versão para branch `refactor/clean-architecture`)
 
-## Descrição
+# 🏆 Coc-Championship
 
-Coc-Championship é um sistema web simples e eficiente para gerenciar ligas internas de Clash of Clans no formato de pontos corridos (round-robin). Desenvolvido para o 13º Pelotão, o aplicativo permite a criação de temporadas, geração automática de confrontos, registro de resultados de batalhas (baseado em estrelas, porcentagem de destruição e tempo), cálculo de classificação com desempates e visualização pública de rankings e rodadas.
+Projeto de **organização de campeonatos internos de Clash of Clans**, com:
+- Painel administrativo para jogadores, temporadas e rodadas
+- Classificação automática
+- Controle de resultados e transparência
+- Interface pública em **Streamlit**
+- Persistência em **Firestore**
 
-O sistema é construído com **Streamlit** para a interface frontend, **Python** para a lógica de negócios e **Firebase Firestore** como banco de dados NoSQL para armazenamento persistente. A autenticação é baseada em usuários armazenados no Firestore (com hash de senha), com suporte a roles de administrador para operações sensíveis.
+---
 
-**Versão atual:** 1.0.0 (consulte `version.py` para atualizações).
+## 🚀 Tecnologias
+- [Python 3.10+](https://www.python.org/)
+- [Streamlit](https://streamlit.io/)
+- [Firebase Admin SDK](https://firebase.google.com/docs/admin/setup)
+- [Firestore](https://firebase.google.com/docs/firestore)
+- [Pytest](https://docs.pytest.org/) para testes
+- Ferramentas de qualidade: **Black**, **Isort**, **Flake8**, **Pre-commit**
+- CI/CD via **GitHub Actions**
 
-**Objetivo principal:** Facilitar a organização de torneios internos, promovendo engajamento e competição amigável entre jogadores.
+---
 
-## Funcionalidades Principais
+## 📂 Estrutura (Clean Architecture leve)
 
-- **Autenticação e Roles:**
-  - Login simples com usuário e senha (armazenados no Firestore com hash SHA-256).
-  - Role de administrador para CRUD de jogadores, criação de temporadas e registro de resultados.
+```
 
-- **Gerenciamento de Jogadores:**
-  - Adicionar, editar e excluir (soft-delete) jogadores com nome e TAG opcional.
-  - Lista pública de jogadores ativos.
+project-root/
+│
+├── app/                # Interface Streamlit
+│   └── streamlit\_app.py
+│
+├── core/               # Regras de negócio puras
+│   ├── rodadas.py
+│   ├── classificacao.py
+│   ├── jogadores.py
+│   └── temporadas.py
+│
+├── infra/              # Adapters (repos Firestore, auth, etc)
+│   ├── repositories.py
+│   ├── firestore\_repo.py
+│   └── **init**.py
+│
+├── tests/              # Testes unitários
+│   ├── test\_core.py
+│   ├── test\_infra.py
+│   └── test\_temporada\_repo.py
+│
+├── .github/
+│   └── workflows/ci.yml   # Lint + testes
+│
+├── requirements.txt
+├── requirements-dev.txt
+├── pyproject.toml
+├── .flake8
+├── .pre-commit-config.yaml
+└── README.md
 
-- **Temporadas:**
-  - Criação e ativação de temporadas (apenas uma ativa por vez).
-  - Geração automática de confrontos round-robin (método do círculo para equilibrar rodadas).
-  - Opção de recriar confrontos com backup automático.
+````
 
-- **Confrontos e Resultados:**
-  - Visualização de rodadas e confrontos por temporada.
-  - Registro de resultados por admin: estrelas (0-3), porcentagem de ataque (0-100%), tempo em segundos.
-  - Determinação automática de vencedor com desempates: Estrelas > Porcentagem > Tempo (menor é melhor).
-  - Tratamento de empates exatos (marca como "rematch" para refazer).
+---
 
-- **Classificação:**
-  - Cálculo automático de pontos (1 por vitória, 0 por derrota).
-  - Desempates: Saldo de estrelas > Média de porcentagem de ataque > Tempo médio de ataque (menor é melhor).
-  - Visualização em tabela com posição, pontos, vitórias/derrotas/empates, etc.
+## 🛠️ Setup de Desenvolvimento
 
-- **Histórico Individual:**
-  - Visualização de confrontos e resultados por jogador na temporada ativa.
+### 1. Clone e instale dependências
+```bash
+git clone https://github.com/<seu-repo>/coc-championship.git
+cd coc-championship
+git checkout refactor/clean-architecture
 
-- **Segurança e Backup:**
-  - Backup automático de rodadas antes de recriação.
-  - Soft-delete para jogadores para preservar histórico.
+# dependências principais
+pip install -r requirements.txt
 
-## Requisitos
+# dependências de dev
+pip install -r requirements-dev.txt
+````
 
-- **Python:** 3.8+ (testado em 3.10+).
-- **Bibliotecas:** 
-  - `streamlit` (frontend e UI).
-  - `pandas` (manipulação de dados e tabelas).
-  - `firebase-admin` (integração com Firestore).
-  - `hashlib` e `datetime` (nativos do Python para hash e timestamps).
-- **Firebase:** Conta no Google Firebase com projeto configurado (Firestore ativado).
-- **Ambiente:** Desenvolvimento local ou deploy em Streamlit Cloud (recomendado para produção).
+### 2. Configure o Firebase
 
-## Instalação
+Crie um arquivo `firebase_init.py` (já existe no projeto) com as credenciais.
+Exemplo mínimo:
 
-1. Clone o repositório:
-   ```
-   git clone https://github.com/seu-usuario/coc-championship.git
-   cd coc-championship
-   ```
+```python
+import firebase_admin
+from firebase_admin import credentials, firestore
 
-2. Crie e ative um ambiente virtual:
-   ```
-   python -m venv venv
-   source venv/bin/activate  # No Windows: venv\Scripts\activate
-   ```
+def init_firebase():
+    if not firebase_admin._apps:
+        cred = credentials.Certificate("path/to/cred.json")
+        firebase_admin.initialize_app(cred)
+    db = firestore.client()
+    return {"db": db}
+```
 
-3. Instale as dependências:
-   ```
-   pip install -r requirements.txt
-   ```
-   (Se `requirements.txt` não existir, instale manualmente: `pip install streamlit pandas firebase-admin`).
+### 3. Pre-commit hooks
 
-4. Configure o Firebase (veja seção abaixo).
+```bash
+pre-commit install
+```
 
-5. Execute localmente:
-   ```
-   streamlit run app.py
-   ```
-   Acesse em `http://localhost:8501`.
+Agora sempre que fizer `git commit`, serão rodados automaticamente:
 
-## Configuração do Firebase
+* `black` (formatador)
+* `isort` (organização de imports)
+* `flake8` (linter)
 
-O sistema usa Firebase Firestore para persistência. Para configurar:
+---
 
-1. Crie um projeto no [Firebase Console](https://console.firebase.google.com/).
-2. Gere uma chave de conta de serviço (Service Account Key) em **Project Settings > Service Accounts > Generate New Private Key**.
-3. **Localmente:** Salve o JSON como `serviceAccountKey.json` na raiz do projeto (não commitar no git!).
-4. **Em produção (Streamlit Cloud):** Use **Streamlit Secrets** para armazenar as credenciais. No arquivo `.streamlit/secrets.toml` ou via interface do Streamlit Cloud, adicione:
-   ```
-   FIREBASE_TYPE = "service_account"
-   FIREBASE_PROJECT_ID = "seu-project-id"
-   FIREBASE_PRIVATE_KEY_ID = "seu-private-key-id"
-   FIREBASE_PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----\nSUA_CHAVE_PRIVADA\n-----END PRIVATE KEY-----\n"
-   FIREBASE_CLIENT_EMAIL = "seu-client-email@project.iam.gserviceaccount.com"
-   FIREBASE_CLIENT_ID = "seu-client-id"
-   FIREBASE_AUTH_URI = "https://accounts.google.com/o/oauth2/auth"
-   FIREBASE_TOKEN_URI = "https://oauth2.googleapis.com/token"
-   FIREBASE_AUTH_PROVIDER_X509_CERT_URL = "https://www.googleapis.com/oauth2/v1/certs"
-   FIREBASE_CLIENT_X509_CERT_URL = "https://www.googleapis.com/robot/v1/metadata/x509/seu-client-email@project.iam.gserviceaccount.com"
-   FIREBASE_UNIVERSE_DOMAIN = "googleapis.com"
-   ```
-   O código em `firebase_init.py` carrega essas variáveis de ambiente.
+## ▶️ Rodando o app
 
-5. Crie o primeiro usuário admin executando `create_admin.py`:
-   ```
-   python create_admin.py
-   ```
-   Siga as instruções para definir usuário e senha.
+```bash
+streamlit run app/streamlit_app.py
+```
 
-**Nota de Segurança:** Rotacione chaves periodicamente. Considere migrar para Firebase Authentication para autenticação mais robusta em futuras versões.
+---
 
-## Uso
+## 🧪 Rodando testes
 
-- **Login:** Use a barra lateral para autenticar. Admins veem opções extras.
-- **Menus Principais:**
-  - **Classificação:** Veja o ranking da temporada ativa.
-  - **Rodadas:** Lista de confrontos por rodada.
-  - **Cadastrar Resultados:** (Admin) Registre resultados de batalhas.
-  - **Jogadores:** (Admin) Gerencie jogadores.
-  - **Temporadas:** (Admin) Crie e gerencie temporadas, gere/recrie confrontos.
-  - **Histórico Individual:** Veja resultados por jogador.
-- **Logout:** Botão na barra lateral.
+```bash
+pytest
+```
 
-Para mais detalhes sobre fluxos, consulte `projeto_co_c_championship_spec.md`.
+---
 
-## Contribuição
+## 🤝 Contribuindo
 
-1. Fork o repositório.
-2. Crie uma branch: `git checkout -b feature/nova-funcionalidade`.
-3. Commit suas mudanças: `git commit -m 'Adiciona nova funcionalidade'`.
-4. Push para a branch: `git push origin feature/nova-funcionalidade`.
-5. Abra um Pull Request.
+### Branches
 
-Relate issues no GitHub Issues. Siga o CHANGELOG.md para rastrear versões.
+* `main` → produção estável
+* `deploy` → versão de deploy/testes
+* `refactor/clean-architecture` → branch de refatoração atual
 
-## Licença
+Crie branches a partir de `refactor/clean-architecture`:
 
-© 13º Pelotão. Todos os direitos reservados. Desenvolvido por Cabo ~ Loki ~ Necrod.
+```bash
+git checkout refactor/clean-architecture
+git pull
+git checkout -b feature/<nome>
+```
 
-Este software é de uso interno e não deve ser redistribuído sem permissão. Para mais informações, contate os mantenedores.
+### Padrão de commits
+
+Adotar **Conventional Commits**:
+
+* `feat:` nova funcionalidade
+* `fix:` correção
+* `chore:` manutenção (CI, docs, dependências)
+* `refactor:` refatoração sem mudar comportamento
+
+Exemplo:
+
+```
+feat(core): adicionar cálculo de classificação de rodadas
+```
+
+### PR Checklist
+
+* [ ] Código formatado com black
+* [ ] Imports organizados com isort
+* [ ] Flake8 sem erros
+* [ ] Testes escritos/atualizados
+* [ ] Revisado por pelo menos 1 dev
+
+---
+
+## 🧭 Roadmap (alto nível)
+
+1. Refatoração para Clean Architecture (em andamento)
+2. Autenticação via Firebase Auth
+3. Integração com API Supercell
+4. Notificações em Discord
+5. Multi-tenant (suporte a múltiplos clãs)
+
+```
